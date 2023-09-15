@@ -1,5 +1,5 @@
-
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 http_archive(
     name = "emsdk",
     sha256 = "bbea764c57af830e761f1fb8600d42dc303aa63ffd43647694eda5b8b757b469",
@@ -18,7 +18,6 @@ emsdk_emscripten_deps(emscripten_version = "3.1.35")
 load("@emsdk//:toolchains.bzl", "register_emscripten_toolchains")
 
 register_emscripten_toolchains()
-
 
 ## Android
 
@@ -49,6 +48,4 @@ android_ndk_repository(
     name = "androidndk",
 )
 
-# register_toolchains("@androidndk//:all")
-
-register_toolchains("@androidndk//toolchains/llvm/prebuilt/darwin-x86_64:toolchain_aarch64-linux-android")
+register_toolchains("@androidndk//:all")
