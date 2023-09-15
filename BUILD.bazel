@@ -27,6 +27,7 @@ cc_library(
 
 cc_library(
     name = "fake_icu",
+    visibility = ["//visibility:public"],
     deps = [
         "//source:common",
         "//source:i18n",
