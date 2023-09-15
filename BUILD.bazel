@@ -1,0 +1,48 @@
+load("@emsdk//emscripten_toolchain:wasm_rules.bzl", "wasm_cc_binary")
+
+config_setting(
+    name = "macos_build",
+    values = {
+        "define": "client_type=macos",
+    },
+)
+
+cc_library(
+    name = "icu",
+    deps = [
+        "//source:common",
+        "//source:data",
+        "//source:i18n",
+        "//source:io",
+    ],
+)
+
+cc_library(
+    name = "fake_icu",
+    deps = [
+        "//source:common",
+        "//source:i18n",
+        "//source:io",
+        "//source:stubdata",
+    ],
+)
+
+cc_binary(
+    name = "main",
+    srcs = ["main.cc"],
+    copts = ["-std=c++20"],
+    linkopts = select({
+        "@platforms//cpu:wasm32": ["-s INITIAL_MEMORY=65536000"],
+        "//conditions:default": [],
+    }),
+    deps = [":icu"],
+)
+
+wasm_cc_binary(
+    name = "wasm-main",
+    cc_target = ":main",
+    outputs = [
+        "main.js",
+        "main.wasm",
+    ],
+)
