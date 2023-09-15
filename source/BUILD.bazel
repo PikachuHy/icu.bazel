@@ -52,6 +52,7 @@ cc_library(
     # srcs = [":icudata"],
     srcs = [":icudata_c"],
     deps = [":common"],
+    alwayslink = True,
 )
 
 icu_major_version = 73
