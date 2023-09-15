@@ -9,6 +9,7 @@ config_setting(
 
 cc_library(
     name = "icu",
+    visibility = ["//visibility:public"],
     deps = [
         "//source:common",
         "//source:data",
