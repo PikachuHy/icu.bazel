@@ -7,6 +7,13 @@ config_setting(
     },
 )
 
+config_setting(
+    name = "android_build",
+    values = {
+        "define": "client_type=android",
+    },
+)
+
 cc_library(
     name = "icu",
     visibility = ["//visibility:public"],
