@@ -1,0 +1,142 @@
+load(":gen_icudata.bzl", "gen_icudata")
+
+licenses(["notice"])  # Apache v2.0
+
+package(
+    default_visibility = ["//visibility:public"],
+)
+
+gen_icudata(
+    name = "icudata",
+    assembly_type = select({
+        "@platforms//os:macos": "gcc-darwin",
+        "//conditions:default": "gcc",
+    }),
+    build_data =
+        select({
+            "@platforms//cpu:wasm32": [
+                "@emsdk//emscripten_toolchain:ar_files",
+                "@emsdk//emscripten_toolchain:compiler_files",
+                "@emsdk//emscripten_toolchain:linker_files",
+            ],
+            "//conditions:default": [],
+        }) + [
+            "@emscripten_bin_mac//:ar_files",
+            "@emscripten_bin_mac//:compiler_files",
+            "@emscripten_bin_mac//:linker_files",
+        ],
+    build_tpl = "build_icudata.sh.tpl",
+    icudt_data = "data/in/icudt73l.dat",
+    icupkg = ":icupkg",
+    icupkg_in_tpl = select({
+        "//:macos_build": "icupkg.in.macos.tpl",
+        "//conditions:default": "icupkg.in.tpl",
+    }),
+    pkgdata = ":pkgdata",
+    without_assembly = select({
+        "@platforms//cpu:wasm32": True,
+        "//conditions:default": False,
+    }),
+    deps = [":common"],
+)
+
+cc_library(
+    name = "data",
+    srcs = [":icudata"],
+)
+
+icu_major_version = 73
+
+icu_minor_version = 2
+
+# We need to label this for configure_make.
+filegroup(
+    name = "all",
+    srcs = glob(["**/*"]),
+)
+
+cc_library(
+    name = "common",
+    srcs = glob(
+        [
+            "common/*.cpp",
+            "common/*.h",
+        ],
+    ),
+    hdrs = glob(["common/unicode/**"]),
+    copts = ["-Wno-deprecated-declarations"],
+    includes = ["common"],
+    local_defines = ["U_COMMON_IMPLEMENTATION"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "i18n",
+    srcs = glob([
+        "i18n/*.cpp",
+        "i18n/*.h",
+    ]),
+    hdrs = glob(["i18n/unicode/**"]),
+    copts = ["-Wno-deprecated-declarations"],
+    includes = ["i18n"],
+    local_defines = ["U_I18N_IMPLEMENTATION"],
+    visibility = ["//visibility:public"],
+    deps = [":common"],
+)
+
+cc_library(
+    name = "io",
+    srcs = glob([
+        "io/*.cpp",
+        "io/*.h",
+    ]),
+    hdrs = glob(["io/unicode/**"]),
+    includes = ["io"],
+    local_defines = ["U_IO_IMPLEMENTATION"],
+    visibility = ["//visibility:public"],
+    deps = [":i18n"],
+)
+
+cc_library(
+    name = "stubdata",
+    srcs = glob([
+        "stubdata/*.cpp",
+        "stubdata/*.h",
+    ]),
+    deps = [":common"],
+)
+
+cc_library(
+    name = "toolutil",
+    srcs = glob(["tools/toolutil/*.cpp"]),
+    hdrs = glob(["tools/toolutil/*.h"]),
+    includes = ["tools/toolutil"],
+    local_defines = [
+        "U_TOOLUTIL_IMPLEMENTATION",
+    ],
+    deps = [":i18n"],
+)
+
+cc_binary(
+    name = "icupkg",
+    srcs = [
+        "tools/icupkg/icupkg.cpp",
+    ],
+    deps = [
+        ":stubdata",
+        ":toolutil",
+    ],
+)
+
+cc_binary(
+    name = "pkgdata",
+    srcs = [
+        "tools/pkgdata/pkgdata.cpp",
+        "tools/pkgdata/pkgtypes.c",
+        "tools/pkgdata/pkgtypes.h",
+    ],
+    deps = [
+        ":stubdata",
+        ":toolutil",
+    ],
+)
