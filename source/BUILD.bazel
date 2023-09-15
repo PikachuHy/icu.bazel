@@ -113,7 +113,10 @@ cc_library(
     includes = ["tools/toolutil"],
     local_defines = [
         "U_TOOLUTIL_IMPLEMENTATION",
-    ],
+    ] + select({
+        "@platforms//os:linux": ["U_ELF"],
+        "//conditions:default": [],
+    }),
     deps = [":i18n"],
 )
 
