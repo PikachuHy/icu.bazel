@@ -1,0 +1,29 @@
+name: MacOS Bazel
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build_with_bazel:
+    runs-on: macos-13
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Mount bazel cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            /private/var/tmp/_bazel_runner/
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'WORKSPACE.bazel', 'MODULE.bazel') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
+
+      - name: Build
+        run: bazel build \:main --config=macos
+
+      - name: Build wasm
+        run: bazel build \:wasm-main
