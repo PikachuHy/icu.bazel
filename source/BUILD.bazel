@@ -1,4 +1,4 @@
-load(":gen_icudata.bzl", "gen_icudata")
+load(":gen_icudata.bzl", "gen_icudata", "gen_icudata_c")
 
 licenses(["notice"])  # Apache v2.0
 
@@ -40,9 +40,18 @@ gen_icudata(
     deps = [":common"],
 )
 
+gen_icudata_c(
+    name = "icudata_c",
+    build_tpl = "gen_icudata_c.sh.tpl",
+    genccode = ":genccode",
+    icudt_data = "data/in/icudt73l.dat",
+)
+
 cc_library(
     name = "data",
-    srcs = [":icudata"],
+    # srcs = [":icudata"],
+    srcs = [":icudata_c"],
+    deps = [":common"],
 )
 
 icu_major_version = 73
@@ -140,6 +149,15 @@ cc_binary(
     ],
     deps = [
         ":stubdata",
+        ":toolutil",
+    ],
+)
+
+cc_binary(
+    name = "genccode",
+    srcs = ["tools/genccode/genccode.c"],
+    deps = [
+        ":common",
         ":toolutil",
     ],
 )

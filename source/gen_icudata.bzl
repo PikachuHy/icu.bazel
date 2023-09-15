@@ -142,3 +142,49 @@ gen_icudata = rule(
         ),
     },
 )
+
+def gen_icudata_c_impl(ctx):
+    icudata_c = ctx.actions.declare_file("icudt73l_dat.c")
+    build_sh = ctx.actions.declare_file("build_icudata_c.sh")
+    ctx.actions.expand_template(
+        template = ctx.file.build_tpl,
+        output = build_sh,
+        substitutions = {
+            "@genccode@": ctx.file.genccode.path,
+            "@icudt_data@": ctx.file.icudt_data.path,
+            "@icudata_c@": icudata_c.path,
+        },
+    )
+    ctx.actions.run_shell(
+        inputs = depset(
+            direct = [build_sh, ctx.file.icudt_data, ctx.file.genccode],
+            transitive = [],
+        ),
+        outputs = [icudata_c],
+        command = "bash " + build_sh.path,
+        # env = env,
+    )
+    return [DefaultInfo(files = depset([icudata_c]))]
+
+gen_icudata_c = rule(
+    implementation = gen_icudata_c_impl,
+    fragments = ["cpp"],
+    attrs = {
+        "build_tpl": attr.label(
+            allow_single_file = True,
+        ),
+        "icudt_data": attr.label(
+            allow_single_file = True,
+        ),
+        "genccode": attr.label(
+            executable = True,
+            cfg = "exec",
+            allow_single_file = True,
+        ),
+        "_cc_toolchain": attr.label(
+            default = Label(
+                "@rules_cc//cc:current_cc_toolchain",  # copybara-use-repo-external-label
+            ),
+        ),
+    },
+)
